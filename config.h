@@ -1,5 +1,5 @@
 // Enable rapid switch from tap to hold, disables double tap hold auto-repeat.
-#define QUICK_TAP_TERM 0
+// #define QUICK_TAP_TERM 0
 #define TAPPING_TERM 200
 
 // Limits the max. amount of layers to 8 to save firmware memory.
