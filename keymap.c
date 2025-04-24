@@ -33,10 +33,6 @@ enum layers {
 #define ALT_L LALT_T(KC_L)
 #define CTL_SCLN RCTL_T(KC_SCLN)
 
-enum custom_keycodes {
-  ARROW = SAFE_RANGE,
-};
-
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 
   [DEF] = LAYOUT(
@@ -47,7 +43,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
   //├────────┼────────┼────────┼────────┼────────┼────────┤                          ├────────┼────────┼────────┼────────┼────────┼────────┤
      KC_ESC,  CTL_A,   ALT_S,   GUI_D,   SFT_F,   KC_G,                               KC_H,    SFT_J,   GUI_K,   ALT_L,   CTL_SCLN, KC_QUOT,
   //├────────┼────────┼────────┼────────┼────────┼────────┼────────┐        ┌────────┼────────┼────────┼────────┼────────┼────────┼────────┤
-     CW_TOGG, KC_Z,    KC_X,    KC_C,    KC_V,    KC_B,    LA_GAM,           _______, KC_N,    KC_M,    KC_COMM, KC_DOT,  KC_PSLS, KC_RSFT,
+     KC_LSFT, KC_Z,    KC_X,    KC_C,    KC_V,    KC_B,    LA_GAM,           _______, KC_N,    KC_M,    KC_COMM, KC_DOT,  KC_PSLS, KC_CAPS,
   //└────────┴────────┴────────┴───┬────┴───┬────┴───┬────┴───┬────┘        └───┬────┴───┬────┴───┬────┴───┬────┴────────┴────────┴────────┘
                                     LA_NUM,  LA_NAV,  KC_ENT,                    KC_SPC,   LA_SYM,  _______
                                 // └────────┴────────┴────────┘                 └────────┴────────┴────────┘
@@ -87,7 +83,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
   //├────────┼────────┼────────┼────────┼────────┼────────┤                          ├────────┼────────┼────────┼────────┼────────┼────────┤
      _______, KC_LT,   KC_LBRC, KC_LCBR, KC_LPRN, KC_TILD,                            KC_CIRC, KC_RPRN, KC_RCBR, KC_RBRC, KC_GT,   _______,
   //├────────┼────────┼────────┼────────┼────────┼────────┤                          ├────────┼────────┼────────┼────────┼────────┼────────┤
-     _______, KC_PMNS, KC_ASTR, KC_EQL,  KC_UNDS, KC_DLR,                             KC_HASH, _______, ARROW,   KC_GRV,  KC_COLN, KC_DQUO,
+     _______, KC_PMNS, KC_ASTR, KC_EQL,  KC_UNDS, KC_DLR,                             KC_HASH, _______, _______, KC_GRV,  KC_COLN, KC_DQUO,
   //├────────┼────────┼────────┼────────┼────────┼────────┼────────┐        ┌────────┼────────┼────────┼────────┼────────┼────────┼────────┤
      _______, KC_PPLS, KC_PIPE, KC_AT,   KC_PSLS, KC_PERC, _______,          _______, _______, KC_NUHS, KC_AMPR, KC_EXLM, KC_QUES, _______,
   //└────────┴────────┴────────┴───┬────┴───┬────┴───┬────┴───┬────┘        └───┬────┴───┬────┴───┬────┴───┬────┴────────┴────────┴────────┘
@@ -110,54 +106,32 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
   )
 };
 
-bool process_record_user(uint16_t keycode, keyrecord_t* record) {
-  switch (keycode) {
-    case ARROW:
-      if (record->event.pressed) {
-        SEND_STRING("->");
-      }
-      return false;
-  }
-  return true;
-}
-
 // documentation: https://docs.qmk.fm/#/feature_eeprom
 void keyboard_post_init_user(void) { // Call the keymap level matrix init.
-    // Set default layer
-    rgblight_enable_noeeprom();
-    rgblight_sethsv_noeeprom(HSV_CYAN);
-    rgblight_mode_noeeprom(RGB_MATRIX_SOLID_REACTIVE_SIMPLE);
+   // Set default layer
+   rgblight_enable_noeeprom();
+   rgblight_sethsv_noeeprom(HSV_CYAN);
+   rgblight_mode_noeeprom(RGB_MATRIX_SOLID_REACTIVE_SIMPLE);
 }
 
-layer_state_t layer_state_set_user(layer_state_t state) {
-    switch (get_highest_layer(state)) {
-    case GAM:
-        rgb_matrix_mode(RGB_MATRIX_CUSTOM_gamepad_effect);
-        break;
-    default: //  for any other layers, or the default layer
-        if (is_caps_word_on()) {
-           rgb_matrix_mode(RGB_MATRIX_CUSTOM_caps_word_effect);
-        } else {
-            rgblight_sethsv_noeeprom(HSV_CYAN);
-            rgblight_mode_noeeprom(RGB_MATRIX_SOLID_REACTIVE_SIMPLE);
-        }
-        break;
-    }
-  return state;
-}
-
-void eeconfig_init_user(void) {  // EEPROM is getting reset!
-    // use the non noeeprom versions, to write these values to EEPROM too
-    rgblight_enable(); // Enable RGB by default
-    rgblight_sethsv(HSV_CYAN);  // Set it to CYAN by default
-    rgblight_mode(RGB_MATRIX_SOLID_REACTIVE_SIMPLE); // set to solid by default
-}
-
-void caps_word_set_user(bool active) {
-    if (active) {
-        rgb_matrix_mode(RGB_MATRIX_CUSTOM_caps_word_effect);
-    } else {
-        rgblight_sethsv_noeeprom(HSV_CYAN);
-        rgblight_mode_noeeprom(RGB_MATRIX_SOLID_REACTIVE_SIMPLE);
-    }
+bool rgb_matrix_indicators_advanced_user(uint8_t led_min, uint8_t led_max) {
+   if (get_highest_layer(layer_state) == 1) {
+      RGB_MATRIX_INDICATOR_SET_COLOR(27, 0, 0, 255);
+   }
+   else if (host_keyboard_led_state().caps_lock) {
+      RGB_MATRIX_INDICATOR_SET_COLOR(57, 0, 0, 255);
+      RGB_MATRIX_INDICATOR_SET_COLOR(28, 0, 0, 255);
+      RGB_MATRIX_INDICATOR_SET_COLOR(29, 0, 0, 255);
+      RGB_MATRIX_INDICATOR_SET_COLOR(30, 0, 0, 255);
+      RGB_MATRIX_INDICATOR_SET_COLOR(31, 0, 0, 255);
+      RGB_MATRIX_INDICATOR_SET_COLOR(32, 0, 0, 255);
+      RGB_MATRIX_INDICATOR_SET_COLOR(33, 0, 0, 255);
+      RGB_MATRIX_INDICATOR_SET_COLOR(62, 0, 0, 255);
+      RGB_MATRIX_INDICATOR_SET_COLOR(63, 0, 0, 255);
+      RGB_MATRIX_INDICATOR_SET_COLOR(64, 0, 0, 255);
+      RGB_MATRIX_INDICATOR_SET_COLOR(65, 0, 0, 255);
+      RGB_MATRIX_INDICATOR_SET_COLOR(66, 0, 0, 255);
+      RGB_MATRIX_INDICATOR_SET_COLOR(67, 0, 0, 255);
+   }
+   return false;
 }
