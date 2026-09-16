@@ -16,7 +16,7 @@ jobs:
   publish:
     name: 'QMK Userspace Publish'
     uses: qmk/.github/.github/workflows/qmk_userspace_publish.yml@main
-    if: success()
+    if: success() && github.ref == 'refs/heads/main'
     needs: build
 
   archive:
@@ -44,6 +44,7 @@ jobs:
           token: ${{ github.token }}
           tag_name: ${{ steps.ver.outputs.tag }}
           name: 'Firmware ${{ steps.ver.outputs.tag }}'
+          make_latest: false
           body: |
             Commit: ${{ github.sha }}
             QMK: ${{ steps.ver.outputs.qmk }}
