@@ -11,10 +11,43 @@ jobs:
     uses: qmk/.github/.github/workflows/qmk_userspace_build.yml@main
     with:
       qmk_repo: qmk/qmk_firmware
-      qmk_ref: master
+      qmk_ref: 0.34.4
 
   publish:
     name: 'QMK Userspace Publish'
     uses: qmk/.github/.github/workflows/qmk_userspace_publish.yml@main
-    if: always() && !cancelled()
+    if: success()
     needs: build
+
+  archive:
+    name: 'Archive versioned release'
+    if: success() && github.ref == 'refs/heads/main'
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Download binaries
+        uses: actions/download-artifact@v8
+        with:
+          name: Firmware
+
+      - name: Compute version
+        id: ver
+        run: |
+          echo "tag=v${{ github.run_number }}-$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+          echo "qmk=$(awk '/^ *qmk_ref:/{print $2; exit}' .github/workflows/build_binaries.yaml)" >> $GITHUB_OUTPUT
+
+      - name: Publish versioned release
+        uses: softprops/action-gh-release@v3
+        with:
+          token: ${{ github.token }}
+          tag_name: ${{ steps.ver.outputs.tag }}
+          name: 'Firmware ${{ steps.ver.outputs.tag }}'
+          body: |
+            Commit: ${{ github.sha }}
+            QMK: ${{ steps.ver.outputs.qmk }}
+          files: |
+            **/*.hex
+            **/*.bin
+            **/*.uf2
